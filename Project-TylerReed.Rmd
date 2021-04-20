@@ -2,10 +2,111 @@
 title: "CIS635-Project"
 author: "Tyler Reed"
 date: "4/19/2021"
-output: github_document
+output:
+  github_document: default
+  pdf_document: default
 ---
 
-```{r load-packages, message=FALSE}
+```{r setup, message=FALSE}
 knitr::opts_chunk$set(error = TRUE, fig.width = 12, fig.asp = 0.618)
 ```
+
+```{r load packages, import data,warning = FALSE, message = FALSE}
+
+library(tidyverse)
+library(knitr)
+library(e1071)
+library(rpart)
+library(neuralnet)
+library(hrbrthemes)
+library(readr)
+library(purrr)
+library(ggthemes)
+
+testA <- read.table("data/dataTestA.txt", header = TRUE)
+testB <- read.table("data/dataTestB.txt", header = TRUE)
+trainA <- read.table("data/dataTrainA.txt", header = TRUE)
+trainB <- read.table("data/dataTrainB.txt", header = TRUE)
+```
+
+
+```{r preliminary analysis, A-files, warning = FALSE, message = FALSE}
+
+trainA <- as_tibble(trainA)
+
+# Calculate summary statistics and produce visuals to check for outliers/noise/NAs
+summary(trainA)
+
+trainA %>%
+  mutate(atRisk = as_factor(atRisk),
+         id = as_factor(id)) %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    theme_tufte(base_size = 16) +
+    geom_histogram(color = "royalblue", bins = 500)
+
+# Test for duplicate records
+length(unique(trainA$id)) == nrow(trainA)
+
+# Results
+
+# id: looks good and no duplicates
+# temp: 1 NA, and min and max troublesome, use average
+# bbSys: 1 NA, and min and max troublesome, use average
+# vo2: 2 NA, max troublesome
+# throat: 1 NA, max troublesome
+# atRisk: looks good
+
+```
+
+```{r preliminary analysis, B-files, warning = FALSE, message = FALSE}
+
+trainB <- as_tibble(trainB)
+
+# Calculate summary statistics and produce visuals to check for outliers/noise/NAs
+summary(trainB)
+
+# Test for duplicate records
+length(unique(trainB$id)) == nrow(trainB)
+
+# Results
+
+# id: looks good and no duplicates
+# headA: 1 NA, max troublesome
+# bodyA: looks good
+# cough: looks good
+# runny: 1 NA
+# nausea: max is troublesome
+# diarrhea: 1 NA
+# atRisk: looks good
+
+```
+
+
+
+```{r compare classifiers, warning = FALSE, message = FALSE}
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
