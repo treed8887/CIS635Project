@@ -25,44 +25,37 @@ trainB <- read.table("data/dataTrainB.txt", header = TRUE)
 ```
 
 ``` r
+# PRELIMINARY ANALYSIS AND CLEANUP, NO GRAPHS
+
+
 trainA <- as_tibble(trainA)
 
 # Calculate summary statistics and produce visuals to check for outliers/noise/NAs
-summary(trainA)
-```
-
-    ##        id            temp            bpSys            vo2             throat   
-    ##  Min.   :   0   Min.   : 15.00   Min.   : 20.0   Min.   : 10.00   Min.   : 81  
-    ##  1st Qu.:1673   1st Qu.: 97.79   1st Qu.:119.0   1st Qu.: 34.00   1st Qu.: 97  
-    ##  Median :3352   Median : 98.19   Median :124.0   Median : 39.00   Median :100  
-    ##  Mean   :3376   Mean   : 98.47   Mean   :124.6   Mean   : 37.76   Mean   :100  
-    ##  3rd Qu.:5084   3rd Qu.: 98.93   3rd Qu.:130.0   3rd Qu.: 42.00   3rd Qu.:103  
-    ##  Max.   :6780   Max.   :198.83   Max.   :501.0   Max.   :150.00   Max.   :122  
-    ##                 NA's   :1        NA's   :1       NA's   :2        NA's   :1    
-    ##      atRisk      
-    ##  Min.   :0.0000  
-    ##  1st Qu.:0.0000  
-    ##  Median :0.0000  
-    ##  Mean   :0.4652  
-    ##  3rd Qu.:1.0000  
-    ##  Max.   :1.0000  
-    ## 
-
-``` r
 trainA %>%
-  mutate(atRisk = as_factor(atRisk),
-         id = as_factor(id)) %>%
-  keep(is.numeric) %>% 
-  gather() %>% 
-  ggplot(aes(value)) +
-    facet_wrap(~ key, scales = "free") +
-    theme_tufte(base_size = 16) +
-    geom_histogram(color = "royalblue", bins = 500)
+  summary() %>%
+  kable()
 ```
 
-![](Project-TylerReed_files/figure-gfm/preliminary%20analysis,%20A-files-1.png)<!-- -->
+|  | id           | temp           | bpSys         | vo2            | throat      | atRisk         |
+| :- | :----------- | :------------- | :------------ | :------------- | :---------- | :------------- |
+|  | Min. : 0     | Min. : 15.00   | Min. : 20.0   | Min. : 10.00   | Min. : 81   | Min. :0.0000   |
+|  | 1st Qu.:1673 | 1st Qu.: 97.79 | 1st Qu.:119.0 | 1st Qu.: 34.00 | 1st Qu.: 97 | 1st Qu.:0.0000 |
+|  | Median :3352 | Median : 98.19 | Median :124.0 | Median : 39.00 | Median :100 | Median :0.0000 |
+|  | Mean :3376   | Mean : 98.47   | Mean :124.6   | Mean : 37.76   | Mean :100   | Mean :0.4652   |
+|  | 3rd Qu.:5084 | 3rd Qu.: 98.93 | 3rd Qu.:130.0 | 3rd Qu.: 42.00 | 3rd Qu.:103 | 3rd Qu.:1.0000 |
+|  | Max. :6780   | Max. :198.83   | Max. :501.0   | Max. :150.00   | Max. :122   | Max. :1.0000   |
+|  | NA           | NA’s :1        | NA’s :1       | NA’s :2        | NA’s :1     | NA             |
 
 ``` r
+# trainA  %>%
+#   mutate(across(.cols = everything(), as_factor)) %>%
+#   keep(is.numeric) %>% 
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#     facet_wrap(~ key, scales = "free") +
+#     theme_tufte(base_size = 16) +
+#     geom_histogram(color = "royalblue", bins = 500)
+
 # Test for duplicate records
 length(unique(trainA$id)) == nrow(trainA)
 ```
@@ -105,20 +98,18 @@ summary(trainB)
     ##  NA's   :1                         NA's   :1
 
 ``` r
-trainB %>%
-  mutate(atRisk = as_factor(atRisk),
-         id = as_factor(id)) %>%
-  keep(is.numeric) %>% 
-  gather() %>% 
-  ggplot(aes(value)) +
-    facet_wrap(~ key, scales = "free") +
-    theme_tufte(base_size = 16) +
-    geom_histogram(color = "royalblue", bins = 500)
-```
+# 
+# trainA %>%
+#   mutate(across(.cols = everything(), as_factor)) %>%
+#   select(-id) %>%
+#   filter(temp > 106) %>%
+#   ggplot(aes(x = temp)) +
+#     geom_bar(fill = "royalblue", position = "dodge") +
+#     scale_fill_brewer(palette = "Dark2") +
+#     theme_tufte(base_size = 16) 
+    
 
-![](Project-TylerReed_files/figure-gfm/preliminary%20analysis,%20B-files-1.png)<!-- -->
 
-``` r
 # Test for duplicate records
 length(unique(trainB$id)) == nrow(trainB)
 ```

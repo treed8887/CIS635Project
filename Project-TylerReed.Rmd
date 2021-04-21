@@ -32,20 +32,24 @@ trainB <- read.table("data/dataTrainB.txt", header = TRUE)
 
 ```{r preliminary analysis, A-files, warning = FALSE, message = FALSE}
 
+# PRELIMINARY ANALYSIS AND CLEANUP, NO GRAPHS
+
+
 trainA <- as_tibble(trainA)
 
 # Calculate summary statistics and produce visuals to check for outliers/noise/NAs
-summary(trainA)
-
 trainA %>%
-  mutate(atRisk = as_factor(atRisk),
-         id = as_factor(id)) %>%
-  keep(is.numeric) %>% 
-  gather() %>% 
-  ggplot(aes(value)) +
-    facet_wrap(~ key, scales = "free") +
-    theme_tufte(base_size = 16) +
-    geom_histogram(color = "royalblue", bins = 500)
+  summary() %>%
+  kable()
+
+# trainA  %>%
+#   mutate(across(.cols = everything(), as_factor)) %>%
+#   keep(is.numeric) %>% 
+#   gather() %>% 
+#   ggplot(aes(value)) +
+#     facet_wrap(~ key, scales = "free") +
+#     theme_tufte(base_size = 16) +
+#     geom_histogram(color = "royalblue", bins = 500)
 
 # Test for duplicate records
 length(unique(trainA$id)) == nrow(trainA)
@@ -67,6 +71,17 @@ trainB <- as_tibble(trainB)
 
 # Calculate summary statistics and produce visuals to check for outliers/noise/NAs
 summary(trainB)
+# 
+# trainA %>%
+#   mutate(across(.cols = everything(), as_factor)) %>%
+#   select(-id) %>%
+#   filter(temp > 106) %>%
+#   ggplot(aes(x = temp)) +
+#     geom_bar(fill = "royalblue", position = "dodge") +
+#     scale_fill_brewer(palette = "Dark2") +
+#     theme_tufte(base_size = 16) 
+    
+
 
 # Test for duplicate records
 length(unique(trainB$id)) == nrow(trainB)
