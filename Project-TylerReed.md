@@ -25,7 +25,7 @@ trainB <- read.table("data/dataTrainB.txt", header = TRUE)
 ```
 
 ``` r
-# PRELIMINARY ANALYSIS AND CLEANUP, NO GRAPHS
+# PRELIMINARY ANALYSIS AND CLEANUP, NO GRAPHS, AND MERGE
 
 
 trainA <- as_tibble(trainA)

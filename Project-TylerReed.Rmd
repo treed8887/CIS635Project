@@ -11,7 +11,7 @@ output:
 knitr::opts_chunk$set(error = TRUE, fig.width = 12, fig.asp = 0.618)
 ```
 
-```{r load packages, import data,warning = FALSE, message = FALSE}
+```{r load packages, import data, warning = FALSE, message = FALSE}
 
 library(tidyverse)
 library(knitr)
@@ -30,9 +30,9 @@ trainB <- read.table("data/dataTrainB.txt", header = TRUE)
 ```
 
 
-```{r preliminary analysis, A-files, warning = FALSE, message = FALSE}
+```{r preliminary analysis, A-train files, warning = FALSE, message = FALSE}
 
-# PRELIMINARY ANALYSIS AND CLEANUP, NO GRAPHS
+# PRELIMINARY ANALYSIS AND CLEANUP, NO GRAPHS, AND MERGE
 
 
 trainA <- as_tibble(trainA)
@@ -54,7 +54,13 @@ trainA %>%
 # Test for duplicate records
 length(unique(trainA$id)) == nrow(trainA)
 
+# Test for missing values by row
+train_A_byrow<- rowSums(is.na(trainA))
+max(train_A_byrow)
+
 # Results
+
+# No more than one NA per dataset
 
 # id: looks good and no duplicates
 # temp: 1 NA, and min and max troublesome, use average
@@ -65,12 +71,15 @@ length(unique(trainA$id)) == nrow(trainA)
 
 ```
 
-```{r preliminary analysis, B-files, warning = FALSE, message = FALSE}
+
+```{r preliminary analysis, B-train files, warning = FALSE, message = FALSE}
 
 trainB <- as_tibble(trainB)
 
 # Calculate summary statistics and produce visuals to check for outliers/noise/NAs
-summary(trainB)
+trainB %>%
+  summary(trainB) %>%
+  kable()
 # 
 # trainA %>%
 #   mutate(across(.cols = everything(), as_factor)) %>%
@@ -86,6 +95,10 @@ summary(trainB)
 # Test for duplicate records
 length(unique(trainB$id)) == nrow(trainB)
 
+# Test for missing values by row
+train_B_byrow <- rowSums(is.na(trainB))
+max(train_B_byrow)
+
 # Results
 
 # id: looks good and no duplicates
@@ -99,13 +112,119 @@ length(unique(trainB$id)) == nrow(trainB)
 
 ```
 
+```{r cleanup outliers/missing data and merge, warning = FALSE, message = FALSE}
+
+# Merge `trainA` and `trainB`
+merged_train <- trainA %>%
+  select(-atRisk) %>%
+  left_join(trainB, by = "id")
+
+
+# `trainA` Results
+
+# id: looks good and no duplicates
+# temp: 1 NA, and min and max troublesome, use average
+# bbSys: 1 NA, and min and max troublesome, use average
+# vo2: 2 NA, max troublesome
+# throat: 1 NA, max troublesome
+# atRisk: looks good
+
+merged_train %>%
+  # Convert `atRisk` to factor
+  mutate(across(6:12, as_factor) %>%
+  # mutate(across(2:11,
+         # Convert NAs to mean value of variable
+         `News Agency` = case_when(str_detect(`News Agency`, "CNN")
+                                   ~ "CNN",
+                                   TRUE ~ `News Agency`),
+         attacktype1_txt = case_when(n <= 3 ~ "Other",
+                                     TRUE ~ as.character(attacktype1_txt)))
+# Create helper functions to define thresholds for vitals variables
+
+temp_noise <- function(v) {
+  for (i in 1:length(v)) {
+    if (!(between(v[i], 90, 106))) {
+      v[i] <- mean(v)
+    }
+  }
+  v
+}
+
+bpSys_noise <- function(v) {
+  for (i in 1:length(v)) {
+    if (!(between(v[i], 90, 150))) {
+      v[i] <- mean(v)
+    }
+  }
+  v
+}
+
+vo2_noise <- function(v) {
+  for (i in 1:length(v)) {
+    if (!(between(v[i], 10, 70))) {
+      v[i] <- mean(v)
+    }
+  }
+  v
+}
+
+throat_noise <- function(v) {
+  for (i in 1:length(v)) {
+    if (!(between(v[i], 80, 120))) {
+      v[i] <- mean(v)
+    }
+  }
+  v
+}
+
+merged_train$ <- _noise(merged_train$temp)
+
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+
+clean_train <- function(trainA, trainB) {
+  
+
+  
+  
+  
+  # Merge `trainA` and `trainB`
+  merged_train <- trainA %>%
+    select(-atRisk) %>%
+    left_join(trainB, by = "id") %>%
+    # Convert NAs of factor variables to mode 
+    mutate(across(6:12, ~ replace_na(., getmode(.)))) %>%
+    # Convert variables to respective types
+    mutate(across(6:12, as_factor)) %>%
+    mutate(across(2:5, as.numeric)) %>%
+    # Convert NAs of numeric variables to mean 
+    mutate(across(2:5, ~ replace_na(., mean(., na.rm = TRUE)))) 
+  
+  
+
+    
+  }
+  
+  
+}
+
+
+
+train_na <- is.na(merged_train)
+sum(train_na)
+
+
+
+
+
+```
+
 
 
 ```{r compare classifiers, warning = FALSE, message = FALSE}
-
-
-
-
 
 
 
