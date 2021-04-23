@@ -63,7 +63,17 @@ length(unique(trainA$id)) == nrow(trainA)
     ## [1] TRUE
 
 ``` r
+# Test for missing values by row
+train_A_byrow<- rowSums(is.na(trainA))
+max(train_A_byrow)
+```
+
+    ## [1] 1
+
+``` r
 # Results
+
+# No more than one NA per dataset
 
 # id: looks good and no duplicates
 # temp: 1 NA, and min and max troublesome, use average
@@ -77,25 +87,20 @@ length(unique(trainA$id)) == nrow(trainA)
 trainB <- as_tibble(trainB)
 
 # Calculate summary statistics and produce visuals to check for outliers/noise/NAs
-summary(trainB)
+trainB %>%
+  summary(trainB) %>%
+  kable()
 ```
 
-    ##        id           headA             bodyA           cough       
-    ##  Min.   :   0   Min.   :  0.000   Min.   :1.000   Min.   :0.0000  
-    ##  1st Qu.:1673   1st Qu.:  3.000   1st Qu.:4.000   1st Qu.:0.0000  
-    ##  Median :3352   Median :  3.000   Median :4.000   Median :0.0000  
-    ##  Mean   :3376   Mean   :  3.461   Mean   :4.016   Mean   :0.3418  
-    ##  3rd Qu.:5084   3rd Qu.:  4.000   3rd Qu.:4.000   3rd Qu.:1.0000  
-    ##  Max.   :6780   Max.   :100.000   Max.   :7.000   Max.   :1.0000  
-    ##                 NA's   :1                                         
-    ##      runny            nausea          diarrhea         atRisk      
-    ##  Min.   :0.0000   Min.   :0.0000   Min.   :0.000   Min.   :0.0000  
-    ##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.000   1st Qu.:0.0000  
-    ##  Median :0.0000   Median :0.0000   Median :0.000   Median :0.0000  
-    ##  Mean   :0.1986   Mean   :0.2367   Mean   :0.102   Mean   :0.4652  
-    ##  3rd Qu.:0.0000   3rd Qu.:0.0000   3rd Qu.:0.000   3rd Qu.:1.0000  
-    ##  Max.   :1.0000   Max.   :5.0000   Max.   :1.000   Max.   :1.0000  
-    ##  NA's   :1                         NA's   :1
+|  | id           | headA          | bodyA         | cough          | runny          | nausea         | diarrhea      | atRisk         |
+| :- | :----------- | :------------- | :------------ | :------------- | :------------- | :------------- | :------------ | :------------- |
+|  | Min. : 0     | Min. : 0.000   | Min. :1.000   | Min. :0.0000   | Min. :0.0000   | Min. :0.0000   | Min. :0.000   | Min. :0.0000   |
+|  | 1st Qu.:1673 | 1st Qu.: 3.000 | 1st Qu.:4.000 | 1st Qu.:0.0000 | 1st Qu.:0.0000 | 1st Qu.:0.0000 | 1st Qu.:0.000 | 1st Qu.:0.0000 |
+|  | Median :3352 | Median : 3.000 | Median :4.000 | Median :0.0000 | Median :0.0000 | Median :0.0000 | Median :0.000 | Median :0.0000 |
+|  | Mean :3376   | Mean : 3.461   | Mean :4.016   | Mean :0.3418   | Mean :0.1986   | Mean :0.2367   | Mean :0.102   | Mean :0.4652   |
+|  | 3rd Qu.:5084 | 3rd Qu.: 4.000 | 3rd Qu.:4.000 | 3rd Qu.:1.0000 | 3rd Qu.:0.0000 | 3rd Qu.:0.0000 | 3rd Qu.:0.000 | 3rd Qu.:1.0000 |
+|  | Max. :6780   | Max. :100.000  | Max. :7.000   | Max. :1.0000   | Max. :1.0000   | Max. :5.0000   | Max. :1.000   | Max. :1.0000   |
+|  | NA           | NA’s :1        | NA            | NA             | NA’s :1        | NA             | NA’s :1       | NA             |
 
 ``` r
 # 
@@ -117,6 +122,14 @@ length(unique(trainB$id)) == nrow(trainB)
     ## [1] TRUE
 
 ``` r
+# Test for missing values by row
+train_B_byrow <- rowSums(is.na(trainB))
+max(train_B_byrow)
+```
+
+    ## [1] 1
+
+``` r
 # Results
 
 # id: looks good and no duplicates
@@ -127,4 +140,28 @@ length(unique(trainB$id)) == nrow(trainB)
 # nausea: max is troublesome
 # diarrhea: 1 NA
 # atRisk: looks good
+```
+
+``` r
+clean_train <- function(trainA, trainB) {
+  
+  # Merge `trainA` and `trainB`
+  merged_train <- trainA %>%
+    select(-atRisk) %>%
+    left_join(trainB, by = "id") %>%
+    # Convert NAs of factor variables to the variable mode 
+    mutate(across(6:12, ~ replace_na(., getmode(.)))) %>%
+    mutate(across(2:5, as.numeric)) %>%
+    # Convert NAs of numeric variables to the variable mean 
+    mutate(across(2:5, ~ replace_na(., mean(., na.rm = TRUE)))) %>%
+
+  # Clean data: replacing any noise with mode or mean according to type
+  for (i in 2:11) {
+      merged_train[, i] <- modify(merged_train[, i], clean_helpers[i - 1])
+  }
+  
+  # Convert variables to respective types
+  merged_train <- merged_train %>%
+    mutate(across(6:12, as_factor))
+}
 ```
