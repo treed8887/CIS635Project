@@ -12,11 +12,13 @@ library(tidyverse)
 library(knitr)
 library(e1071)
 library(rpart)
+library(rpart.plot)
 library(neuralnet)
 library(hrbrthemes)
 library(readr)
 library(purrr)
 library(ggthemes)
+library(varhandle)
 
 testA <- read.table("data/dataTestA.txt", header = TRUE)
 testB <- read.table("data/dataTestB.txt", header = TRUE)
@@ -143,17 +145,17 @@ max(train_B_byrow)
 ```
 
 ``` r
-clean_train <- function(trainA, trainB) {
+clean_train <- function(A, B) {
   
   # Merge `trainA` and `trainB`
-  merged_train <- trainA %>%
+  merged_train <- A %>%
     select(-atRisk) %>%
-    left_join(trainB, by = "id") %>%
+    left_join(B, by = "id") %>%
     # Convert NAs of factor variables to the variable mode 
     mutate(across(6:12, ~ replace_na(., getmode(.)))) %>%
     mutate(across(2:5, as.numeric)) %>%
     # Convert NAs of numeric variables to the variable mean 
-    mutate(across(2:5, ~ replace_na(., mean(., na.rm = TRUE)))) %>%
+    mutate(across(2:5, ~ replace_na(., mean(., na.rm = TRUE))))
 
   # Clean data: replacing any noise with mode or mean according to type
   for (i in 2:11) {
@@ -163,5 +165,101 @@ clean_train <- function(trainA, trainB) {
   # Convert variables to respective types
   merged_train <- merged_train %>%
     mutate(across(6:12, as_factor))
+  
+  merged_train
 }
+
+cleaned_train <- clean_train(trainA, trainB)
+
+kable(summary(cleaned_train), caption = "New Summary Statistics to Confirm Cleaned Training Data")
+```
+
+|  | id           | temp           | bpSys         | vo2           | throat      | headA       | bodyA  | cough  | runny  | nausea | diarrhea | atRisk |
+| :- | :----------- | :------------- | :------------ | :------------ | :---------- | :---------- | :----- | :----- | :----- | :----- | :------- | :----- |
+|  | Min. : 0     | Min. : 96.18   | Min. : 97.0   | Min. :10.00   | Min. : 81   | 3 :2970     | 1: 7   | 0:3570 | 0:4347 | 0:4145 | 0:4871   | 0:2901 |
+|  | 1st Qu.:1673 | 1st Qu.: 97.79 | 1st Qu.:119.0 | 1st Qu.:34.00 | 1st Qu.: 97 | 5 : 906     | 2: 91  | 1:1854 | 1:1077 | 1:1279 | 1: 553   | 1:2523 |
+|  | Median :3352 | Median : 98.19 | Median :124.0 | Median :39.00 | Median :100 | 4 : 715     | 3: 709 | NA     | NA     | NA     | NA       | NA     |
+|  | Mean :3376   | Mean : 98.47   | Mean :124.5   | Mean :37.74   | Mean :100   | 2 : 544     | 4:3745 | NA     | NA     | NA     | NA       | NA     |
+|  | 3rd Qu.:5084 | 3rd Qu.: 98.93 | 3rd Qu.:130.0 | 3rd Qu.:42.00 | 3rd Qu.:103 | 6 : 172     | 5: 753 | NA     | NA     | NA     | NA       | NA     |
+|  | Max. :6780   | Max. :101.40   | Max. :149.0   | Max. :58.00   | Max. :116   | 1 : 91      | 6: 110 | NA     | NA     | NA     | NA       | NA     |
+|  | NA           | NA             | NA            | NA            | NA          | (Other): 26 | 7: 9   | NA     | NA     | NA     | NA       | NA     |
+
+New Summary Statistics to Confirm Cleaned Training Data
+
+``` r
+# Convert datatypes of variables and merge test data; testA and testB
+cleaned_test <- testA %>%
+    as_tibble() %>%
+    select(-atRisk) %>%
+    left_join(testB, by = "id") %>%
+    mutate(across(2:5, as.numeric)) %>%
+    mutate(across(6:12, as_factor))
+```
+
+``` r
+modTree <- rpart(atRisk~temp+bpSys+vo2+throat+headA+bodyA+cough+runny+nausea+diarrhea, cleaned_test)
+
+rpart.plot(modTree)
+```
+
+![](Project-TylerReed_files/figure-gfm/trees-1.png)<!-- -->
+
+``` r
+predTree <- predict(modTree,cleaned_test, type = "vector")
+table(predTree, cleaned_test$atRisk)
+```
+
+    ##         
+    ## predTree   0   1
+    ##        1 655 103
+    ##        2  80 519
+
+``` r
+# 86.51% Accuracy
+```
+
+``` r
+modBayes <- naiveBayes(atRisk~.-id, cleaned_test)
+predBayes <- predict(modBayes, cleaned_test)
+table(predBayes, cleaned_test$atRisk)
+```
+
+    ##          
+    ## predBayes   0   1
+    ##         0 649 127
+    ##         1  86 495
+
+``` r
+# 84.3% Accuracy
+```
+
+``` r
+cleaned_test_svm <- cleaned_test %>%
+  mutate(across(where(is.factor), unfactor))
+
+modSVM <- svm(cleaned_test_svm[, 2:11], kernel = "linear")
+predSVM <- predict(modSVM, cleaned_test_svm[, 2:11])
+table(predSVM, cleaned_test_svm$atRisk)
+```
+
+    ##        
+    ## predSVM   0   1
+    ##   FALSE 174 188
+    ##   TRUE  561 434
+
+``` r
+# 44.8% Accuracy
+
+modSVM_Poly <- svm(cleaned_test_svm[, 2:11], kernel = "polynomial")
+predSVM_Poly <- predict(modSVM_Poly, cleaned_test_svm[, 2:11])
+table(predSVM_Poly, cleaned_test_svm$atRisk)
+```
+
+    ##             
+    ## predSVM_Poly   0   1
+    ##        FALSE 471 219
+    ##        TRUE  264 403
+
+``` r
+# 64.8% Accuracy
 ```

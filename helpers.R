@@ -108,35 +108,35 @@ clean_helpers <- list(temp,
                    diarrhea)
 
 # The following is to aid in testing the helper functions above
-max(temp_noise(merged_train$temp))
-min(temp_noise(merged_train$temp))
-
-max(bpSys_noise(merged_train$bpSys))
-min(bpSys_noise(merged_train$bpSys))
-
-max(vo2_noise(merged_train$vo2))
-min(vo2_noise(merged_train$vo2))
-
-max(throat_noise(merged_train$throat))
-min(throat_noise(merged_train$throat))
-
-max(headA_noise(merged_train$headA))
-min(headA_noise(merged_train$headA))
-
-max(bodyA_noise(merged_train$bodyA))
-min(bodyA_noise(merged_train$bodyA))
-
-max(cough_noise(merged_train$cough))
-min(cough_noise(merged_train$cough))
-
-max(runny_noise(merged_train$runny))
-min(runny_noise(merged_train$runny))
-
-max(nausea_noise(merged_train$nausea))
-min(nausea_noise(merged_train$nausea))
-
-max(diarrhea_noise(merged_train$diarrhea))
-min(diarrhea_noise(merged_train$diarrhea))
+# max(temp_noise(merged_train$temp))
+# min(temp_noise(merged_train$temp))
+# 
+# max(bpSys_noise(merged_train$bpSys))
+# min(bpSys_noise(merged_train$bpSys))
+# 
+# max(vo2_noise(merged_train$vo2))
+# min(vo2_noise(merged_train$vo2))
+# 
+# max(throat_noise(merged_train$throat))
+# min(throat_noise(merged_train$throat))
+# 
+# max(headA_noise(merged_train$headA))
+# min(headA_noise(merged_train$headA))
+# 
+# max(bodyA_noise(merged_train$bodyA))
+# min(bodyA_noise(merged_train$bodyA))
+# 
+# max(cough_noise(merged_train$cough))
+# min(cough_noise(merged_train$cough))
+# 
+# max(runny_noise(merged_train$runny))
+# min(runny_noise(merged_train$runny))
+# 
+# max(nausea_noise(merged_train$nausea))
+# min(nausea_noise(merged_train$nausea))
+# 
+# max(diarrhea_noise(merged_train$diarrhea))
+# min(diarrhea_noise(merged_train$diarrhea))
 
 
 

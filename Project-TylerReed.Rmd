@@ -17,11 +17,13 @@ library(tidyverse)
 library(knitr)
 library(e1071)
 library(rpart)
+library(rpart.plot)
 library(neuralnet)
 library(hrbrthemes)
 library(readr)
 library(purrr)
 library(ggthemes)
+library(varhandle)
 
 testA <- read.table("data/dataTestA.txt", header = TRUE)
 testB <- read.table("data/dataTestB.txt", header = TRUE)
@@ -112,19 +114,162 @@ max(train_B_byrow)
 
 ```
 
+```{r cleaning helper functions, include = FALSE}
+
+# Create helper functions to define thresholds for vitals variables
+
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+temp <- function(v) {
+  for (i in 1:length(v)) {
+    if (!(between(v[i], 90, 106))) {
+      v[i] <- mean(v)
+    }
+  }
+  v
+}
+
+bpSys <- function(v) {
+  for (i in 1:length(v)) {
+    if (!(between(v[i], 90, 150))) {
+      v[i] <- mean(v)
+    }
+  }
+  v
+}
+
+vo2 <- function(v) {
+  for (i in 1:length(v)) {
+    if (!(between(v[i], 10, 70))) {
+      v[i] <- mean(v)
+    }
+  }
+  v
+}
+
+throat <- function(v) {
+  for (i in 1:length(v)) {
+    if (!(between(v[i], 80, 120))) {
+      v[i] <- mean(v)
+    }
+  }
+  v
+}
+
+headA<- function(v) {
+  for (i in 1:length(v)) {
+    if (!(between(v[i], 0, 9))) {
+      v[i] <- getmode(v)
+    }
+  }
+  v
+}
+
+bodyA <- function(v) {
+  for (i in 1:length(v)) {
+    if (!(between(v[i], 0, 9))) {
+      v[i] <- getmode(v)
+    }
+  }
+  v
+}
+
+cough <- function(v) {
+  for (i in 1:length(v)) {
+    if (v[i] != 1 & v[i] != 0) {
+      v[i] <- getmode(v)
+    }
+  }
+  v
+}
+
+runny <- function(v) {
+  for (i in 1:length(v)) {
+    if (v[i] != 1 & v[i] != 0) {
+      v[i] <- getmode(v)
+    }
+  }
+  v
+}
+
+nausea <- function(v) {
+  for (i in 1:length(v)) {
+    if (v[i] != 1 & v[i] != 0) {
+      v[i] <- getmode(v)
+    }
+  }
+  v
+}
+
+diarrhea <- function(v) {
+  for (i in 1:length(v)) {
+    if (v[i] != 1 & v[i] != 0) {
+      v[i] <- getmode(v)
+    }
+  }
+  v
+}
+
+# Vector of cleaning helper functions 
+clean_helpers <- list(temp,
+                   bpSys,
+                   vo2,
+                   throat,
+                   headA,
+                   bodyA,
+                   cough,
+                   runny,
+                   nausea,
+                   diarrhea)
+
+# The following is to aid in testing the helper functions above
+# max(temp_noise(merged_train$temp))
+# min(temp_noise(merged_train$temp))
+# 
+# max(bpSys_noise(merged_train$bpSys))
+# min(bpSys_noise(merged_train$bpSys))
+# 
+# max(vo2_noise(merged_train$vo2))
+# min(vo2_noise(merged_train$vo2))
+# 
+# max(throat_noise(merged_train$throat))
+# min(throat_noise(merged_train$throat))
+# 
+# max(headA_noise(merged_train$headA))
+# min(headA_noise(merged_train$headA))
+# 
+# max(bodyA_noise(merged_train$bodyA))
+# min(bodyA_noise(merged_train$bodyA))
+# 
+# max(cough_noise(merged_train$cough))
+# min(cough_noise(merged_train$cough))
+# 
+# max(runny_noise(merged_train$runny))
+# min(runny_noise(merged_train$runny))
+# 
+# max(nausea_noise(merged_train$nausea))
+# min(nausea_noise(merged_train$nausea))
+# 
+# max(diarrhea_noise(merged_train$diarrhea))
+# min(diarrhea_noise(merged_train$diarrhea))
+```
+
 ```{r cleanup outliers/missing data and merge, warning = FALSE, message = FALSE}
 
-clean_train <- function(trainA, trainB) {
+clean_train <- function(A, B) {
   
   # Merge `trainA` and `trainB`
-  merged_train <- trainA %>%
+  merged_train <- A %>%
     select(-atRisk) %>%
-    left_join(trainB, by = "id") %>%
+    left_join(B, by = "id") %>%
     # Convert NAs of factor variables to the variable mode 
     mutate(across(6:12, ~ replace_na(., getmode(.)))) %>%
     mutate(across(2:5, as.numeric)) %>%
     # Convert NAs of numeric variables to the variable mean 
-    mutate(across(2:5, ~ replace_na(., mean(., na.rm = TRUE)))) %>%
+    mutate(across(2:5, ~ replace_na(., mean(., na.rm = TRUE))))
 
   # Clean data: replacing any noise with mode or mean according to type
   for (i in 2:11) {
@@ -134,9 +279,22 @@ clean_train <- function(trainA, trainB) {
   # Convert variables to respective types
   merged_train <- merged_train %>%
     mutate(across(6:12, as_factor))
+  
+  merged_train
 }
-```
 
+cleaned_train <- clean_train(trainA, trainB)
+
+kable(summary(cleaned_train), caption = "New Summary Statistics to Confirm Cleaned Training Data")
+
+# Convert datatypes of variables and merge test data; testA and testB
+cleaned_test <- testA %>%
+    as_tibble() %>%
+    select(-atRisk) %>%
+    left_join(testB, by = "id") %>%
+    mutate(across(2:5, as.numeric)) %>%
+    mutate(across(6:12, as_factor))
+```
 
 
 ```{r compare classifiers, warning = FALSE, message = FALSE}
@@ -146,16 +304,62 @@ clean_train <- function(trainA, trainB) {
 ```
 
 
+```{r trees, warning = FALSE, message = FALSE}
+
+modTree <- rpart(atRisk~temp+bpSys+vo2+throat+headA+bodyA+cough+runny+nausea+diarrhea, cleaned_test)
+
+rpart.plot(modTree)
+
+predTree <- predict(modTree,cleaned_test, type = "vector")
+table(predTree, cleaned_test$atRisk)
+
+# 86.51% Accuracy
+```
+
+```{r naive bayes, warning = FALSE, message = FALSE}
+
+modBayes <- naiveBayes(atRisk~.-id, cleaned_test)
+predBayes <- predict(modBayes, cleaned_test)
+table(predBayes, cleaned_test$atRisk)
+
+# 84.3% Accuracy
+```
+
+```{r svm, warning = FALSE, message = FALSE}
+
+cleaned_test_svm <- cleaned_test %>%
+  mutate(across(where(is.factor), unfactor))
+
+modSVM <- svm(cleaned_test_svm[, 2:11], kernel = "linear")
+predSVM <- predict(modSVM, cleaned_test_svm[, 2:11])
+table(predSVM, cleaned_test_svm$atRisk)
+
+# 44.8% Accuracy
+
+modSVM_Poly <- svm(cleaned_test_svm[, 2:11], kernel = "polynomial")
+predSVM_Poly <- predict(modSVM_Poly, cleaned_test_svm[, 2:11])
+table(predSVM_Poly, cleaned_test_svm$atRisk)
+
+# 64.8% Accuracy
+
+```
+
+```{r ann, warning = FALSE, message = FALSE}
 
 
 
+```
+
+```{r random forest, warning = FALSE, message = FALSE}
 
 
 
+```
+
+```{r knn, warning = FALSE, message = FALSE}
 
 
 
-
-
+```
 
 
