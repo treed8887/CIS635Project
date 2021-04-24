@@ -3,62 +3,400 @@ CIS635-Project
 Tyler Reed
 4/19/2021
 
-``` r
-knitr::opts_chunk$set(error = TRUE, fig.width = 12, fig.asp = 0.618)
-```
+# Preliminary Analysis
 
 ``` r
-library(tidyverse)
-library(knitr)
-library(e1071)
-library(rpart)
-library(rpart.plot)
-library(neuralnet)
-library(hrbrthemes)
-library(readr)
-library(purrr)
-library(ggthemes)
-library(varhandle)
-library(fastDummies)
-
-testA <- read.table("data/dataTestA.txt", header = TRUE)
-testB <- read.table("data/dataTestB.txt", header = TRUE)
-trainA <- read.table("data/dataTrainA.txt", header = TRUE)
-trainB <- read.table("data/dataTrainB.txt", header = TRUE)
-```
-
-``` r
-# PRELIMINARY ANALYSIS AND CLEANUP, NO GRAPHS, AND MERGE
-
-
 trainA <- as_tibble(trainA)
-
 # Calculate summary statistics and produce visuals to check for outliers/noise/NAs
 trainA %>%
   summary() %>%
-  kable()
+  kable(caption = "Summary Table of `trainA`")
 ```
 
-|  | id           | temp           | bpSys         | vo2            | throat      | atRisk         |
-| :- | :----------- | :------------- | :------------ | :------------- | :---------- | :------------- |
-|  | Min. : 0     | Min. : 15.00   | Min. : 20.0   | Min. : 10.00   | Min. : 81   | Min. :0.0000   |
-|  | 1st Qu.:1673 | 1st Qu.: 97.79 | 1st Qu.:119.0 | 1st Qu.: 34.00 | 1st Qu.: 97 | 1st Qu.:0.0000 |
-|  | Median :3352 | Median : 98.19 | Median :124.0 | Median : 39.00 | Median :100 | Median :0.0000 |
-|  | Mean :3376   | Mean : 98.47   | Mean :124.6   | Mean : 37.76   | Mean :100   | Mean :0.4652   |
-|  | 3rd Qu.:5084 | 3rd Qu.: 98.93 | 3rd Qu.:130.0 | 3rd Qu.: 42.00 | 3rd Qu.:103 | 3rd Qu.:1.0000 |
-|  | Max. :6780   | Max. :198.83   | Max. :501.0   | Max. :150.00   | Max. :122   | Max. :1.0000   |
-|  | NA           | NA’s :1        | NA’s :1       | NA’s :2        | NA’s :1     | NA             |
+<table>
+
+<caption>
+
+Summary Table of `trainA`
+
+</caption>
+
+<thead>
+
+<tr>
+
+<th style="text-align:left;">
+
+</th>
+
+<th style="text-align:left;">
+
+id
+
+</th>
+
+<th style="text-align:left;">
+
+temp
+
+</th>
+
+<th style="text-align:left;">
+
+bpSys
+
+</th>
+
+<th style="text-align:left;">
+
+vo2
+
+</th>
+
+<th style="text-align:left;">
+
+throat
+
+</th>
+
+<th style="text-align:left;">
+
+atRisk
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 0
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 15.00
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 20.0
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 10.00
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 81
+
+</td>
+
+<td style="text-align:left;">
+
+Min. :0.0000
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:1673
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.: 97.79
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:119.0
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.: 34.00
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.: 97
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:0.0000
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Median :3352
+
+</td>
+
+<td style="text-align:left;">
+
+Median : 98.19
+
+</td>
+
+<td style="text-align:left;">
+
+Median :124.0
+
+</td>
+
+<td style="text-align:left;">
+
+Median : 39.00
+
+</td>
+
+<td style="text-align:left;">
+
+Median :100
+
+</td>
+
+<td style="text-align:left;">
+
+Median :0.0000
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :3376
+
+</td>
+
+<td style="text-align:left;">
+
+Mean : 98.47
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :124.6
+
+</td>
+
+<td style="text-align:left;">
+
+Mean : 37.76
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :100
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :0.4652
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:5084
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.: 98.93
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:130.0
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.: 42.00
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:103
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:1.0000
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :6780
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :198.83
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :501.0
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :150.00
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :122
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :1.0000
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA’s :1
+
+</td>
+
+<td style="text-align:left;">
+
+NA’s :1
+
+</td>
+
+<td style="text-align:left;">
+
+NA’s :2
+
+</td>
+
+<td style="text-align:left;">
+
+NA’s :1
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+### Results of `trainA`
+
+No more than one NA per dataset
+
+  - id: looks good and no duplicates
+  - temp: 1 NA, and min and max troublesome, use average
+  - bbSys: 1 NA, and min and max troublesome, use average
+  - vo2: 2 NA, max troublesome
+  - throat: 1 NA, max troublesome
+  - atRisk: looks good
+
+<!-- end list -->
 
 ``` r
-# trainA  %>%
-#   mutate(across(.cols = everything(), as_factor)) %>%
-#   keep(is.numeric) %>% 
-#   gather() %>% 
-#   ggplot(aes(value)) +
-#     facet_wrap(~ key, scales = "free") +
-#     theme_tufte(base_size = 16) +
-#     geom_histogram(color = "royalblue", bins = 500)
-
 # Test for duplicate records
 length(unique(trainA$id)) == nrow(trainA)
 ```
@@ -66,7 +404,7 @@ length(unique(trainA$id)) == nrow(trainA)
     ## [1] TRUE
 
 ``` r
-# Test for missing values by row
+# Test for missing values by row: no more than one to avoid considering removal of instance
 train_A_byrow<- rowSums(is.na(trainA))
 max(train_A_byrow)
 ```
@@ -74,50 +412,481 @@ max(train_A_byrow)
     ## [1] 1
 
 ``` r
-# Results
-
-# No more than one NA per dataset
-
-# id: looks good and no duplicates
-# temp: 1 NA, and min and max troublesome, use average
-# bbSys: 1 NA, and min and max troublesome, use average
-# vo2: 2 NA, max troublesome
-# throat: 1 NA, max troublesome
-# atRisk: looks good
-```
-
-``` r
 trainB <- as_tibble(trainB)
 
 # Calculate summary statistics and produce visuals to check for outliers/noise/NAs
 trainB %>%
   summary(trainB) %>%
-  kable()
+  kable(caption = "Summary Table of `trainB`")
 ```
 
-|  | id           | headA          | bodyA         | cough          | runny          | nausea         | diarrhea      | atRisk         |
-| :- | :----------- | :------------- | :------------ | :------------- | :------------- | :------------- | :------------ | :------------- |
-|  | Min. : 0     | Min. : 0.000   | Min. :1.000   | Min. :0.0000   | Min. :0.0000   | Min. :0.0000   | Min. :0.000   | Min. :0.0000   |
-|  | 1st Qu.:1673 | 1st Qu.: 3.000 | 1st Qu.:4.000 | 1st Qu.:0.0000 | 1st Qu.:0.0000 | 1st Qu.:0.0000 | 1st Qu.:0.000 | 1st Qu.:0.0000 |
-|  | Median :3352 | Median : 3.000 | Median :4.000 | Median :0.0000 | Median :0.0000 | Median :0.0000 | Median :0.000 | Median :0.0000 |
-|  | Mean :3376   | Mean : 3.461   | Mean :4.016   | Mean :0.3418   | Mean :0.1986   | Mean :0.2367   | Mean :0.102   | Mean :0.4652   |
-|  | 3rd Qu.:5084 | 3rd Qu.: 4.000 | 3rd Qu.:4.000 | 3rd Qu.:1.0000 | 3rd Qu.:0.0000 | 3rd Qu.:0.0000 | 3rd Qu.:0.000 | 3rd Qu.:1.0000 |
-|  | Max. :6780   | Max. :100.000  | Max. :7.000   | Max. :1.0000   | Max. :1.0000   | Max. :5.0000   | Max. :1.000   | Max. :1.0000   |
-|  | NA           | NA’s :1        | NA            | NA             | NA’s :1        | NA             | NA’s :1       | NA             |
+<table>
+
+<caption>
+
+Summary Table of `trainB`
+
+</caption>
+
+<thead>
+
+<tr>
+
+<th style="text-align:left;">
+
+</th>
+
+<th style="text-align:left;">
+
+id
+
+</th>
+
+<th style="text-align:left;">
+
+headA
+
+</th>
+
+<th style="text-align:left;">
+
+bodyA
+
+</th>
+
+<th style="text-align:left;">
+
+cough
+
+</th>
+
+<th style="text-align:left;">
+
+runny
+
+</th>
+
+<th style="text-align:left;">
+
+nausea
+
+</th>
+
+<th style="text-align:left;">
+
+diarrhea
+
+</th>
+
+<th style="text-align:left;">
+
+atRisk
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 0
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 0.000
+
+</td>
+
+<td style="text-align:left;">
+
+Min. :1.000
+
+</td>
+
+<td style="text-align:left;">
+
+Min. :0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+Min. :0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+Min. :0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+Min. :0.000
+
+</td>
+
+<td style="text-align:left;">
+
+Min. :0.0000
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:1673
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.: 3.000
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:4.000
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:0.000
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:0.0000
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Median :3352
+
+</td>
+
+<td style="text-align:left;">
+
+Median : 3.000
+
+</td>
+
+<td style="text-align:left;">
+
+Median :4.000
+
+</td>
+
+<td style="text-align:left;">
+
+Median :0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+Median :0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+Median :0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+Median :0.000
+
+</td>
+
+<td style="text-align:left;">
+
+Median :0.0000
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :3376
+
+</td>
+
+<td style="text-align:left;">
+
+Mean : 3.461
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :4.016
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :0.3418
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :0.1986
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :0.2367
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :0.102
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :0.4652
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:5084
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.: 4.000
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:4.000
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:1.0000
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:0.0000
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:0.000
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:1.0000
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :6780
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :100.000
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :7.000
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :1.0000
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :1.0000
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :5.0000
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :1.000
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :1.0000
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA’s :1
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA’s :1
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA’s :1
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
 
 ``` r
-# 
-# trainA %>%
-#   mutate(across(.cols = everything(), as_factor)) %>%
-#   select(-id) %>%
-#   filter(temp > 106) %>%
-#   ggplot(aes(x = temp)) +
-#     geom_bar(fill = "royalblue", position = "dodge") +
-#     scale_fill_brewer(palette = "Dark2") +
-#     theme_tufte(base_size = 16) 
-    
-
-
 # Test for duplicate records
 length(unique(trainB$id)) == nrow(trainB)
 ```
@@ -125,152 +894,695 @@ length(unique(trainB$id)) == nrow(trainB)
     ## [1] TRUE
 
 ``` r
-# Test for missing values by row
+# Test for missing values by row: no more than one to avoid considering removal of instance
 train_B_byrow <- rowSums(is.na(trainB))
 max(train_B_byrow)
 ```
 
     ## [1] 1
 
+### Results of `trainB`
+
+  - id: looks good and no duplicates
+  - headA: 1 NA, max troublesome
+  - bodyA: looks good
+  - cough: looks good
+  - runny: 1 NA
+  - nausea: max is troublesome
+  - diarrhea: 1 NA
+  - atRisk: looks good
+
+# Confirm outliers/missing data are cleaned
+
 ``` r
-# Results
-
-# id: looks good and no duplicates
-# headA: 1 NA, max troublesome
-# bodyA: looks good
-# cough: looks good
-# runny: 1 NA
-# nausea: max is troublesome
-# diarrhea: 1 NA
-# atRisk: looks good
-```
-
-``` r
-clean_train <- function(A, B) {
-  
-  # Merge `trainA` and `trainB`
-  merged_train <- A %>%
-    select(-atRisk) %>%
-    left_join(B, by = "id") %>%
-    # Convert NAs of factor variables to the variable mode 
-    mutate(across(6:12, ~ replace_na(., getmode(.)))) %>%
-    mutate(across(2:5, as.numeric)) %>%
-    # Convert NAs of numeric variables to the variable mean 
-    mutate(across(2:5, ~ replace_na(., mean(., na.rm = TRUE))))
-
-  # Clean data: replacing any noise with mode or mean according to type
-  for (i in 2:11) {
-      merged_train[, i] <- modify(merged_train[, i], clean_helpers[i - 1])
-  }
-  
-  # Convert variables to respective types
-  merged_train <- merged_train %>%
-    mutate(across(6:12, as_factor))
-  
-  merged_train
-}
-
-xTrain <- clean_train(trainA, trainB)
-
 kable(summary(xTrain), caption = "New Summary Statistics to Confirm Cleaned Training Data")
 ```
 
-|  | id           | temp           | bpSys         | vo2           | throat      | headA       | bodyA  | cough  | runny  | nausea | diarrhea | atRisk |
-| :- | :----------- | :------------- | :------------ | :------------ | :---------- | :---------- | :----- | :----- | :----- | :----- | :------- | :----- |
-|  | Min. : 0     | Min. : 96.18   | Min. : 97.0   | Min. :10.00   | Min. : 81   | 3 :2970     | 1: 7   | 0:3570 | 0:4347 | 0:4145 | 0:4871   | 0:2901 |
-|  | 1st Qu.:1673 | 1st Qu.: 97.79 | 1st Qu.:119.0 | 1st Qu.:34.00 | 1st Qu.: 97 | 5 : 906     | 2: 91  | 1:1854 | 1:1077 | 1:1279 | 1: 553   | 1:2523 |
-|  | Median :3352 | Median : 98.19 | Median :124.0 | Median :39.00 | Median :100 | 4 : 715     | 3: 709 | NA     | NA     | NA     | NA       | NA     |
-|  | Mean :3376   | Mean : 98.47   | Mean :124.5   | Mean :37.74   | Mean :100   | 2 : 544     | 4:3745 | NA     | NA     | NA     | NA       | NA     |
-|  | 3rd Qu.:5084 | 3rd Qu.: 98.93 | 3rd Qu.:130.0 | 3rd Qu.:42.00 | 3rd Qu.:103 | 6 : 172     | 5: 753 | NA     | NA     | NA     | NA       | NA     |
-|  | Max. :6780   | Max. :101.40   | Max. :149.0   | Max. :58.00   | Max. :116   | 1 : 91      | 6: 110 | NA     | NA     | NA     | NA       | NA     |
-|  | NA           | NA             | NA            | NA            | NA          | (Other): 26 | 7: 9   | NA     | NA     | NA     | NA       | NA     |
+<table>
+
+<caption>
 
 New Summary Statistics to Confirm Cleaned Training Data
 
-``` r
-# Convert datatypes of variables and merge test data; testA and testB
-xTest<- testA %>%
-    as_tibble() %>%
-    select(-atRisk) %>%
-    left_join(testB, by = "id") %>%
-    mutate(across(2:5, as.numeric)) %>%
-    mutate(across(6:12, as_factor))
-```
+</caption>
 
-``` r
-modTree <- rpart(atRisk~temp+bpSys+vo2+throat+headA+bodyA+cough+runny+nausea+diarrhea, xTrain)
+<thead>
 
-rpart.plot(modTree)
-```
+<tr>
 
-![](Project-TylerReed_files/figure-gfm/trees-1.png)<!-- -->
+<th style="text-align:left;">
 
-``` r
-predTree <- predict(modTree, xTest, type = "vector")
-table(predTree, xTest$atRisk)
-```
+</th>
 
-    ##         
-    ## predTree   0   1
-    ##        1 644 100
-    ##        2  91 522
+<th style="text-align:left;">
 
-``` r
-# 85.92% Accuracy
-# 85.15% Recall
-```
+id
 
-``` r
-modBayes <- naiveBayes(atRisk~.-id, xTrain)
-predBayes <- predict(modBayes, xTest)
-table(predBayes, xTest$atRisk)
-```
+</th>
 
-    ##          
-    ## predBayes   0   1
-    ##         0 642 115
-    ##         1  93 507
+<th style="text-align:left;">
 
-``` r
-# 84.67% Accuracy
-# 84.5% Recall
-```
+temp
 
-``` r
-xTrain_noFactors <- xTrain %>%
-  mutate(across(where(is.factor), unfactor))
+</th>
 
-xTest_noFactors <- xTest %>%
-  mutate(across(where(is.factor), unfactor))
+<th style="text-align:left;">
 
-modSVM <- svm(xTrain_noFactors[, 2:11], kernel = "linear")
-predSVM <- predict(modSVM, xTest_noFactors[, 2:11])
-table(predSVM, xTest_noFactors$atRisk)
-```
+bpSys
 
-    ##        
-    ## predSVM   0   1
-    ##   FALSE 369 467
-    ##   TRUE  366 155
+</th>
 
-``` r
-# 38.61% Accuracy
-# 29.75% Recall
+<th style="text-align:left;">
 
-modSVM_Poly <- svm(xTrain_noFactors[, 2:11], kernel = "polynomial")
-predSVM_Poly <- predict(modSVM_Poly, xTest_noFactors[, 2:11])
-table(predSVM_Poly, xTest_noFactors$atRisk)
-```
+vo2
 
-    ##             
-    ## predSVM_Poly   0   1
-    ##        FALSE 487 245
-    ##        TRUE  248 377
+</th>
 
-``` r
-# 63.67% Accuracy
-# 60.32% Recall
-```
+<th style="text-align:left;">
+
+throat
+
+</th>
+
+<th style="text-align:left;">
+
+headA
+
+</th>
+
+<th style="text-align:left;">
+
+bodyA
+
+</th>
+
+<th style="text-align:left;">
+
+cough
+
+</th>
+
+<th style="text-align:left;">
+
+runny
+
+</th>
+
+<th style="text-align:left;">
+
+nausea
+
+</th>
+
+<th style="text-align:left;">
+
+diarrhea
+
+</th>
+
+<th style="text-align:left;">
+
+atRisk
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 0
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 96.18
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 97.0
+
+</td>
+
+<td style="text-align:left;">
+
+Min. :10.00
+
+</td>
+
+<td style="text-align:left;">
+
+Min. : 81
+
+</td>
+
+<td style="text-align:left;">
+
+3 :2970
+
+</td>
+
+<td style="text-align:left;">
+
+1: 7
+
+</td>
+
+<td style="text-align:left;">
+
+0:3570
+
+</td>
+
+<td style="text-align:left;">
+
+0:4347
+
+</td>
+
+<td style="text-align:left;">
+
+0:4145
+
+</td>
+
+<td style="text-align:left;">
+
+0:4871
+
+</td>
+
+<td style="text-align:left;">
+
+0:2901
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:1673
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.: 97.79
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:119.0
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.:34.00
+
+</td>
+
+<td style="text-align:left;">
+
+1st Qu.: 97
+
+</td>
+
+<td style="text-align:left;">
+
+5 : 906
+
+</td>
+
+<td style="text-align:left;">
+
+2: 91
+
+</td>
+
+<td style="text-align:left;">
+
+1:1854
+
+</td>
+
+<td style="text-align:left;">
+
+1:1077
+
+</td>
+
+<td style="text-align:left;">
+
+1:1279
+
+</td>
+
+<td style="text-align:left;">
+
+1: 553
+
+</td>
+
+<td style="text-align:left;">
+
+1:2523
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Median :3352
+
+</td>
+
+<td style="text-align:left;">
+
+Median : 98.19
+
+</td>
+
+<td style="text-align:left;">
+
+Median :124.0
+
+</td>
+
+<td style="text-align:left;">
+
+Median :39.00
+
+</td>
+
+<td style="text-align:left;">
+
+Median :100
+
+</td>
+
+<td style="text-align:left;">
+
+4 : 715
+
+</td>
+
+<td style="text-align:left;">
+
+3: 709
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :3376
+
+</td>
+
+<td style="text-align:left;">
+
+Mean : 98.47
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :124.5
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :37.74
+
+</td>
+
+<td style="text-align:left;">
+
+Mean :100
+
+</td>
+
+<td style="text-align:left;">
+
+2 : 544
+
+</td>
+
+<td style="text-align:left;">
+
+4:3745
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:5084
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.: 98.93
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:130.0
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:42.00
+
+</td>
+
+<td style="text-align:left;">
+
+3rd Qu.:103
+
+</td>
+
+<td style="text-align:left;">
+
+6 : 172
+
+</td>
+
+<td style="text-align:left;">
+
+5: 753
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :6780
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :101.40
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :149.0
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :58.00
+
+</td>
+
+<td style="text-align:left;">
+
+Max. :116
+
+</td>
+
+<td style="text-align:left;">
+
+1 : 91
+
+</td>
+
+<td style="text-align:left;">
+
+6: 110
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+(Other): 26
+
+</td>
+
+<td style="text-align:left;">
+
+7: 9
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+<td style="text-align:left;">
+
+NA
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+#### Rationale
+
+The table above provides confirmation of the cleaned dataset as no more
+missing values are detected and all variables are within established
+ranges.
+
+# Selecting a Classifier
 
 ``` r
 normalize <- function(x) {
@@ -316,101 +1628,415 @@ for (i in 2:(ncol(xTrain_norm) - 1)) {
 }
 ```
 
-``` r
-# modANN <- neuralnet(xTrain_norm_formula, xTrain_norm, hidden=2)
-# 
-# pred <-  neuralnet::compute(modANN, xTest_norm[, 2:ncol(xTest_norm)])
-# pred$net.result
-# table(pred$net.result[,1]>0.5,xTest_norm$atRisk)
-# 
-# plot(modANN)
+#### Rationale
 
-# Best ANN Results after a few iterations 
+The code chunk above includes normalizing the dataset which was
+essential to testing the ANN classifier due to the wide range of scales
+among the variables.
 
-# 85.41% accuracy with 1 hidden nodes
-# 84.19% recall with 1 hidden nodes
+### Best ANN Results after a few iterations
 
-# 85.41% accuracy with 2 hidden nodes
-# 83.87% recall with 2 hidden nodes
+  - 85.41% accuracy with 1 hidden nodes
 
-# 70.00% accuracy with 3 hidden nodes
-# 75.41% recall with 3 hidden nodes
+  - 84.19% recall with 1 hidden nodes
 
-# 83.79% accuracy with 4 hidden nodes
-# 83.50% recall with 4 hidden nodes
+  - 85.41% accuracy with 2 hidden nodes
 
-# 28.08% accuracy with 5 hidden nodes
-# 32.98% recall with 5 hidden nodes
-```
+  - 83.87% recall with 2 hidden nodes
 
-``` r
-# Tyler Reed
-# CIS 635
-# Winter 2021
+  - 70.00% accuracy with 3 hidden nodes
 
-rando_forest <- function(x,t,n,d) {
-  # two stop statements to check for out of bounds for `n` and `d`
-  if (n < 1 | n > nrow(x)) {
-    stop("No. of instances chosen not within no. of rows of dataframe.")
-  }
-  if (d < 1 | d > ncol(x)) {
-    stop("No. of attributes chosen not within no. of cols of dataframe.")
-  }
-  
-  # for loop adding `rpart` models to list
-  ls <- list()
-  for (i in 1:t) {
-    str <- "atRisk"
-    sep <- "~"
-    sam_d <- sample((ncol(x)), d, replace = FALSE)
-    # for loop creating string of formula for sampling attributes
-    for (j in sam_d) {
-      str <- paste0(str, sep, names(x)[j])
-      sep <- "+"
-    }
-    sam_n <- sample(nrow(x), n, replace = TRUE)
-    ls[[i]] <- rpart(str, x[sam_n,])
-  }
-  return (ls)
-}
+  - 75.41% recall with 3 hidden nodes
 
-pred <- function(ls, x) {
-  # for loop creating dataframe of each models predictions per instance
-  df <- cbind(tibble(predict(ls[[1]], x)))
-  for (i in 2:length(ls)) {
-    df <- cbind(df, data_frame(predict(ls[[i]], x)))
-  }
-  # for loop creating vector of ensemble random forest predictions by instance
-  means <- as_tibble(rowMeans(df))
-  vec <- c()
-  for (i in 1:nrow(means)) {
-    if (means[i, 1] <= 0.50) {
-      vec <- rbind(vec, 0)
-    } else if (means[i, 1] > 0.50) {
-        vec <- rbind(vec, 1)
-    }
-  }
-  return(vec)
-}  
-```
+  - 83.79% accuracy with 4 hidden nodes
+
+  - 83.50% recall with 4 hidden nodes
+
+  - 28.08% accuracy with 5 hidden nodes
+
+  - 32.98% recall with 5 hidden nodes
+
+#### Rationale
+
+As you can see above, several iterations with different parameters were
+used in order to produce the best results from the ANN classifier, but
+as hidden nodes reached 5, performance plummeted.
 
 ``` r
-xTrain_forest <- xTrain_noFactors %>%
-  select(-id)
-
-forest <- rando_forest(xTrain_forest, t = 10, n = 3000, d = 5)
-
+forest <- rando_forest(xTrain_noFactors, t = 10, n = 5000, d = 8)
 pred_forest <- pred(forest, xTest_noFactors)
-table(pred_forest, xTest_noFactors$atRisk)
+table_forest <- table(pred_forest, xTest_noFactors$atRisk)
+
+# Best with t = 10, n = 3000, d = 5
+# 86.37% accuracy 
+# 87.35% recall 
+
+# Best with t = 10, n = 3000, d = 8
+# 78.70% accuracy 
+# 87.93% recall 
+
+# Best with t = 10, n = 5000, d = 5
+# 85.26% accuracy 
+# 87.81% recall 
+
+# Best with t = 10, n = 5000, d = 8
+# 84.97% accuracy 
+# 88.56% recall 
 ```
 
-    ##            
-    ## pred_forest   0   1
-    ##           0 562  97
-    ##           1 173 525
+#### Rationale
+
+Above you will notice several iterations had to be performed with the
+random forest classifier in order to find a good balance between
+overfitting with too many trees and higher performance.
 
 ``` r
-# Best with several iterations
-# 86.37% accuracy with  hidden nodes
-# 87.35% recall with 4 hidden nodes
+comparisons
 ```
+
+<table>
+
+<caption>
+
+Classifier Performance
+
+</caption>
+
+<thead>
+
+<tr>
+
+<th style="text-align:left;">
+
+Classifier
+
+</th>
+
+<th style="text-align:right;">
+
+Recall
+
+</th>
+
+<th style="text-align:right;">
+
+Accuracy
+
+</th>
+
+<th style="text-align:left;">
+
+Comments
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td style="text-align:left;">
+
+Random Forests
+
+</td>
+
+<td style="text-align:right;">
+
+88.56
+
+</td>
+
+<td style="text-align:right;">
+
+84.97
+
+</td>
+
+<td style="text-align:left;">
+
+highest values from the following parameters: t = 10, n = 5000, d = 8
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+Decision Tree
+
+</td>
+
+<td style="text-align:right;">
+
+85.15
+
+</td>
+
+<td style="text-align:right;">
+
+85.92
+
+</td>
+
+<td style="text-align:left;">
+
+took highest values after several iterations
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+Naive Bayes
+
+</td>
+
+<td style="text-align:right;">
+
+84.50
+
+</td>
+
+<td style="text-align:right;">
+
+84.67
+
+</td>
+
+<td style="text-align:left;">
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+ANN
+
+</td>
+
+<td style="text-align:right;">
+
+84.19
+
+</td>
+
+<td style="text-align:right;">
+
+85.41
+
+</td>
+
+<td style="text-align:left;">
+
+highest values from 1 hidden node, iterated up to 5 nodes
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+SVM: polynomial
+
+</td>
+
+<td style="text-align:right;">
+
+60.32
+
+</td>
+
+<td style="text-align:right;">
+
+63.67
+
+</td>
+
+<td style="text-align:left;">
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+SVM: linear
+
+</td>
+
+<td style="text-align:right;">
+
+29.75
+
+</td>
+
+<td style="text-align:right;">
+
+38.61
+
+</td>
+
+<td style="text-align:left;">
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+#### Rationale
+
+The employee vitals dataset includes many features which are categorical
+and 4 which are continuous. Decision Trees and random forests can more
+can accurately divide the data based on categorical variables than many
+other classifiers. Additionally, the random forest had the highest
+Recall accuracy at 88.56%. I think it would be appropriate to emphasize
+Recall over Accuracy as health risks demand erring towards false
+positives over that of false negatives. Even so, the random forest model
+is bouyed by a descent Accuracy as well in comparison to the other
+classifiers.
+
+# Conclusions and Plots
+
+``` r
+# Build k-means cluster with scaled data
+res.km <- kmeans(scale(xTest_norm[, c(-1, -ncol(xTest_norm))]), 3, nstart =  25)
+```
+
+``` r
+# Table of cluster sizes
+kable(tibble("Cluster 1 Size" = res.km$size[[1]], "Cluster 2 Size" = res.km$size[[2]], "Cluster 3 Size" = res.km$size[[3]]), caption = "Numeric Size Comparison of Clusters")
+```
+
+<table>
+
+<caption>
+
+Numeric Size Comparison of Clusters
+
+</caption>
+
+<thead>
+
+<tr>
+
+<th style="text-align:right;">
+
+Cluster 1 Size
+
+</th>
+
+<th style="text-align:right;">
+
+Cluster 2 Size
+
+</th>
+
+<th style="text-align:right;">
+
+Cluster 3 Size
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td style="text-align:right;">
+
+749
+
+</td>
+
+<td style="text-align:right;">
+
+339
+
+</td>
+
+<td style="text-align:right;">
+
+269
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+``` r
+# Dimension reduction using PCA
+res.pca <- prcomp(xTest_norm[, c(-1, -ncol(xTest_norm))],  scale = TRUE)
+# Coordinates of individuals
+ind.coord <- as.data.frame(get_pca_ind(res.pca)$coord)
+# Add clusters obtained using the K-means algorithm
+ind.coord$cluster <- factor(res.km$cluster)
+# Add `headA` groups from the original data set
+ind.coord$atRisk <- xTest$atRisk
+
+# Plot K-means clusters
+kmean_plot <- ggscatter(
+  ind.coord, x = "Dim.1", y = "Dim.2", 
+  color = "cluster", palette = "npg", ellipse = TRUE, ellipse.type = "convex",
+  shape = "atRisk", size = 3,  legend = "right", ggtheme = theme_bw(),
+  xlab = paste0("Dim 1 (", variance.percent[1], "% )" ),
+  ylab = paste0("Dim 2 (", variance.percent[2], "% )" ) +
+  stat_mean(aes(color = cluster), size = 8),
+  title = "K-means Clusters by `At Risk` Employees")
+```
+
+    ## Error in paste0("Dim 1 (", variance.percent[1], "% )"): object 'variance.percent' not found
+
+``` r
+## ATTRIBUTION: the kmeans clusting code above is adapted from the following site,
+#https://www.datanovia.com/en/blog/k-means-clustering-visualization-in-r-step-by-step-guide/
+```
+
+![kmeansplot](Kmeansplot.png)
+
+### *K-means Clustering Plot*
+
+Clustering reveals more about how much overlap and non-linear the data
+is, which makes random forest a descent choice as a classifier; however,
+the fact that there are several discrete and continuous variables in the
+dataset makes the random forest stand out the most.
+
+``` r
+plot
+```
+
+![](Project-TylerReed_files/figure-gfm/plot-1.png)<!-- -->
+
+### *Continuous Variables Plots*
+
+The plot of the several continuous variables above gives another
+illustration of how non-linear the data tends to be. Random forests do
+quite well with these kinds of distributions. One interesting aspect of
+the data is the tendency for those within the upper or lower ends of the
+thresholds for each vital to be more at risk. Naturally, this makes
+sense and is encouraging as this pattern may aid in health-related
+decisions.
