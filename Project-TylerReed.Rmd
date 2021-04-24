@@ -460,7 +460,7 @@ rando_forest <- function(x,t,n,d) {
 
 pred <- function(ls, x) {
   # for loop creating dataframe of each models predictions per instance
-  df <- cbind(tibble(predict(ls[[1]], x, type = "vector")))
+  df <- cbind(tibble(predict(ls[[1]], x)))
   for (i in 2:length(ls)) {
     df <- cbind(df, data_frame(predict(ls[[i]], x)))
   }
@@ -482,19 +482,22 @@ pred <- function(ls, x) {
 
 ```{r random forest, warning = FALSE, message = FALSE}
 
-xTrain_forest <- xTrain %>%
+xTrain_forest <- xTrain_noFactors %>%
   select(-id)
 
 forest <- rando_forest(xTrain_forest, t = 10, n = 3000, d = 5)
 
-# forest %>%
-#   pred(xTest[, 2:ncol(xTest)])
+pred_forest <- pred(forest, xTest_noFactors)
+table(pred_forest, xTest_noFactors$atRisk)
 
-predict(forest[[1]], xTest)
+# Best with several iterations
+# 86.37% accuracy with  hidden nodes
+# 87.35% recall with 4 hidden nodes
+
 
 ```
 
-```{r knn, warning = FALSE, message = FALSE}
+```{r k-means, warning = FALSE, message = FALSE}
 
 
 
