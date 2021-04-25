@@ -385,8 +385,6 @@ NA
 
 ### Results of `trainA`
 
-No more than one NA per dataset
-
   - id: looks good and no duplicates
   - temp: 1 NA, and min and max troublesome, use average
   - bbSys: 1 NA, and min and max troublesome, use average
@@ -1908,7 +1906,7 @@ The employee vitals dataset includes many features which are categorical
 and 4 which are continuous. Decision Trees and random forests can more
 can accurately divide the data based on categorical variables than many
 other classifiers. Additionally, the random forest had the highest
-Recall accuracy at 88.56%. I think it would be appropriate to emphasize
+Recall at 88.56%. I think it would be appropriate to emphasize
 Recall over Accuracy as health risks demand erring towards false
 positives over that of false negatives. Even so, the random forest model
 is bouyed by a descent Accuracy as well in comparison to the other
