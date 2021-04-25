@@ -2035,6 +2035,8 @@ The plot of the several continuous variables above gives another
 illustration of how non-linear the data tends to be. Random forests do
 quite well with these kinds of distributions. One interesting aspect of
 the data is the tendency for those within the upper or lower ends of the
-thresholds for each vital to be more at risk. Naturally, this makes
+thresholds for the `temp` and `vo2 max` vitals to be more at risk. Naturally, this makes
 sense and is encouraging as this pattern may aid in health-related
-decisions.
+decisions. However, the fact that the mean of the `throat` distribution is most likely to 
+be at risk is concerning when considered alone. The `bpSys' seems to be show a pattern of
+higher risk when higher the value. 
