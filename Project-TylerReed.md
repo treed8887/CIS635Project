@@ -2038,5 +2038,5 @@ the data is the tendency for those within the upper or lower ends of the
 thresholds for the `temp` and `vo2 max` vitals to be more at risk. Naturally, this makes
 sense and is encouraging as this pattern may aid in health-related
 decisions. However, the fact that the mean of the `throat` distribution is most likely to 
-be at risk is concerning when considered alone. The `bpSys' seems to be show a pattern of
+be at risk is concerning when considered alone. The `bpSys` seems to be show a pattern of
 higher risk when higher the value. 
