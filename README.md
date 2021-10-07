@@ -1,2 +1,2 @@
-# CIS635Project
-CIS 635 Data Mining Project
+# COVID-19 At-risk Employee Project
+COVID-19 At-risk Employee Data Mining Project
