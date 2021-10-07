@@ -1,6 +1,4 @@
 # Tyler Reed
-# CIS 635
-# Winter 2021
 
   
 rando_forest <- function(x,t,n,d) {
