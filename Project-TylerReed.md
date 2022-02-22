@@ -2007,7 +2007,7 @@ kmean_plot <- ggscatter(
   title = "K-means Clusters by `At Risk` Employees")
 ```
 
-    ## Error in paste0("Dim 1 (", variance.percent[1], "% )"): object 'variance.percent' not found
+    
 
 ``` r
 ## ATTRIBUTION: the kmeans clusting code above is adapted from the following site,
